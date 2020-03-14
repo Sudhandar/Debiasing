@@ -1,6 +1,11 @@
 import numpy as np
 
 def read_glove_vecs(glove_file):
+    """
+    Reads the glove file and converts it to word to vec format
+    
+    """
+    
     with open(glove_file, 'r',encoding='utf8') as f:
         words = set()
         word_to_vec_map = {}
@@ -12,8 +17,6 @@ def read_glove_vecs(glove_file):
             word_to_vec_map[curr_word] = np.array(line[1:], dtype=np.float64)
             
     return words, word_to_vec_map
-
-words, word_to_vec_map = read_glove_vecs('glove.6B.50d.txt')
 
 def cosine_similarity(u, v):
     """
@@ -56,25 +59,7 @@ def complete_analogy(word_a, word_b, word_c, word_to_vec_map):
             
     return best_word
 
-triads_to_try = [('italy', 'italian', 'spain'), ('india', 'delhi', 'japan'), ('man', 'woman', 'boy'), ('small', 'smaller', 'large')]
-for triad in triads_to_try:
-    print ('{} -> {} :: {} -> {}'.format( *triad, complete_analogy(*triad,word_to_vec_map)))
-    
-g = word_to_vec_map['woman'] - word_to_vec_map['man']
-print(g)
 
-print ('List of names and their similarities with constructed vector:')
-
-name_list = ['john', 'marie', 'sophie', 'ronaldo', 'priya', 'rahul', 'danielle', 'reza', 'katy', 'yasmin']
-
-for w in name_list:
-    print (w, cosine_similarity(word_to_vec_map[w], g))
-    
-print('Other words and their similarities:')
-word_list = ['lipstick', 'guns', 'science', 'arts', 'literature', 'warrior','doctor', 'tree', 'receptionist', 
-             'technology',  'fashion', 'teacher', 'engineer', 'pilot', 'computer', 'singer']
-for w in word_list:
-    print (w, cosine_similarity(word_to_vec_map[w], g))
     
 def neutralize(word, g, word_to_vec_map):
     """
@@ -89,15 +74,11 @@ def neutralize(word, g, word_to_vec_map):
     
     return e_debiased
 
-e = "receptionist"
-print("cosine similarity between " + e + " and g, before neutralizing: ", cosine_similarity(word_to_vec_map["receptionist"], g))
 
-e_debiased = neutralize("receptionist", g, word_to_vec_map)
-print("cosine similarity between " + e + " and g, after neutralizing: ", cosine_similarity(e_debiased, g))
 
 def equalize(pair, bias_axis, word_to_vec_map):
     """
-    Debias gender specific words by following the equalize method described in the figure above.
+    Debias gender specific words
 
     """
 
@@ -119,6 +100,31 @@ def equalize(pair, bias_axis, word_to_vec_map):
     e2 = corrected_e_w2B+mu_orth
                                                                     
     return e1, e2
+
+words, word_to_vec_map = read_glove_vecs('glove.6B.50d.txt')
+
+g = word_to_vec_map['woman'] - word_to_vec_map['man']
+print(g)
+print ('List of names and their similarities with constructed vector:')
+
+# girls and boys name
+name_list = [ 'ronaldo', 'priya', 'rahul', 'danielle', 'reza', 'katy', 'yasmin','mario','steve','sekar']
+
+for w in name_list:
+    print (w, cosine_similarity(word_to_vec_map[w], g))
+    
+print('Other words and their similarities:')
+word_list = ['lipstick', 'guns', 'science', 'arts', 'literature', 'warrior','doctor', 'tree', 'receptionist', 
+             'technology',  'fashion', 'teacher', 'engineer', 'pilot', 'computer', 'singer']
+for w in word_list:
+    print (w, cosine_similarity(word_to_vec_map[w], g))
+    
+e = "receptionist"
+print("cosine similarity between " + e + " and g, before neutralizing: ", cosine_similarity(word_to_vec_map["receptionist"], g))
+
+e_debiased = neutralize("receptionist", g, word_to_vec_map)
+print("cosine similarity between " + e + " and g, after neutralizing: ", cosine_similarity(e_debiased, g))
+
 
 print("cosine similarities before equalizing:")
 print("cosine_similarity(word_to_vec_map[\"man\"], gender) = ", cosine_similarity(word_to_vec_map["man"], g))
